@@ -1,5 +1,6 @@
 from networktables import NetworkTables
 
+
 class NTManager:
     nt = None
 
