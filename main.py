@@ -1,6 +1,7 @@
 from PipelineManager import PipelineManager
 from CameraManager import CameraManager
 from Constants import CameraConstants
+from NTManager import NTManager
 import cv2
 import logging
 
@@ -8,28 +9,30 @@ logging.basicConfig(level=logging.DEBUG)
 
 
 pipelines = {
-
+    'cargo': CargoPipline,
+    'hatch': HatchPipline,
+    'reflector': ReflectorPipline
 }
 
 cameras = {
-    'front_cam': CameraConstants.port_matrix['top_left']
+    'cargo': CameraConstants.port_matrix['bottom_right'],
+    'hatch': CameraConstants.port_matrix['bottom_right'],
+    'reflector': CameraConstants.port_matrix['top_right']
 }
 
 pipeline_manager = PipelineManager(pipelines)
-# here we will put the first camera that will capture frames at the beginning of the match
-camera_manager = CameraManager(CameraConstants.port_matrix['bottom_right'])
+camera_manager = CameraManager(cameras)
+
+nt_manager = NTManager("ImageProcessing")
 
 
 def nt_settings_listener(table, key, value, isNew):
     if key == 'target':
         pipeline_manager.change_current_pipeline(value)
-    if key == 'camera':
         camera_manager.change_camera(value)
 
 
-
 if __name__ == '__main__':
-
 
     while True:
         has_frame, frame = camera_manager.read_frame()

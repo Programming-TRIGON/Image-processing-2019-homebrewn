@@ -1,10 +1,8 @@
 import cv2
-from Constants import CameraConstants
 
 
 class CameraManager:
-    __current_camera = None
-    __camera_id = None
+    __current_camera = None  # here we will put the first camera that will capture frames at the beginning of the match
     __cameras = {}
 
     def __init__(self, cams):
@@ -18,9 +16,4 @@ class CameraManager:
             raise KeyError("camera does not exist!")
 
     def read_frame(self):
-        return self.cam.read()
-
-    def get_camera_id(self):
-        return self.camera_id
-
-
+        return self.__current_camera.read()
