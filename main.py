@@ -11,6 +11,10 @@ pipelines = {
 
 }
 
+cameras = {
+    'front_cam': CameraConstants.port_matrix['top_left']
+}
+
 pipeline_manager = PipelineManager(pipelines)
 # here we will put the first camera that will capture frames at the beginning of the match
 camera_manager = CameraManager(CameraConstants.port_matrix['bottom_right'])
@@ -19,15 +23,15 @@ camera_manager = CameraManager(CameraConstants.port_matrix['bottom_right'])
 def nt_settings_listener(table, key, value, isNew):
     if key == 'target':
         pipeline_manager.change_current_pipeline(value)
+    if key == 'camera':
+        camera_manager.change_camera(value)
+
 
 
 if __name__ == '__main__':
-#TODO: make a thread that will run CameraManager and set global variables: frame and has_frame
+
+
     while True:
-
-        if camera_id_from_networkTable not camera_manager.get_camera_id():
-            camera_manager.change_camera(camera_id_from_networkTable)
-
         has_frame, frame = camera_manager.read_frame()
 
         if has_frame:
