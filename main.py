@@ -5,29 +5,10 @@ from NTManager import NTManager
 from ReflectorPipeline import ReflectorPipeline
 from CargoPipeline import CargoPipeline
 from HatchPipeline import HatchPipeline
-import cv2
+from DirectionFunctions import *
 import logging
 
 logging.basicConfig(level=logging.DEBUG)
-
-
-pipelines = {
-    'cargo': CargoPipeline(),
-    'hatch': HatchPipeline(),
-    'reflector': ReflectorPipeline()
-}
-
-cameras_ports = {
-    'cargo': CameraConstants.port_matrix['bottom_right'],
-    'hatch': CameraConstants.port_matrix['bottom_right'],
-    'reflector': CameraConstants.port_matrix['top_right']
-}
-
-pipeline_manager = PipelineManager(pipelines)
-camera_manager = CameraManager(cameras_ports)
-nt_manager = NTManager("ImageProcessing")
-# the first target to be searched
-current_target = 'hatch'
 
 
 def nt_settings_listener(table, key, value, isNew):
@@ -35,26 +16,32 @@ def nt_settings_listener(table, key, value, isNew):
     if key == 'target':
         pipeline_manager.change_current_pipeline(value)
         camera_manager.change_camera(value)
-        current_target = value  # current_target should be equals value and not key
+        current_target = value
 
 
 if __name__ == '__main__':
+    pipelines = {
+        'cargo': (CargoPipeline(), one_contour_xy_direction),
+        'hatch': (HatchPipeline(), one_contour_xy_direction),
+        'reflector': (ReflectorPipeline(), two_contour_xy_direction)
+    }
+
+    cameras_ports = {
+        'cargo': CameraConstants.port_matrix['bottom_right'],
+        'hatch': CameraConstants.port_matrix['bottom_right'],
+        'reflector': CameraConstants.port_matrix['top_right']
+    }
+
+    pipeline_manager = PipelineManager(pipelines)
+    camera_manager = CameraManager(cameras_ports)
+    nt_manager = NTManager("ImageProcessing", nt_settings_listener)
+    # the first target to be searched
+    current_target = 'hatch'
+
     while True:
         has_frame, frame = camera_manager.read_frame()
-        contours = pipeline_manager.current_pipeline.process(frame)
-        if has_frame and contours is not None:
-                if current_target == "reflector":
-                    # compute the center of two contours and send directions to the network table
-                    moment1 = cv2.moments(contours[0])
-                    moment2 = cv2.moments(contours[1])
-                    target_x = (int(moment1["m10"] / moment1["m00"])+int(moment2["m10"] / moment2["m00"]))/2
-                    target_y = (int(moment1["m01"] / moment1["m00"]+int(moment1["m01"] / moment1["m00"])))/2
-                    nt_manager.put_string("direction", str(target_x)+' '+str(target_y))
-                else:
-                    # compute the center of one contour and send directions to the network table
-                    moment = cv2.moments(contours[0])
-                    target_x = int(moment["m10"] / moment["m00"])
-                    target_y = int(moment["m01"] / moment["m00"])
-                    nt_manager.put_string("direction", str(target_x) + ' ' + str(target_y))
+        current_pipeline = pipeline_manager.current_pipeline
+        if has_frame:
+            nt_manager.put_string("direction", current_pipeline[1](current_pipeline[0].process(frame)))
         else:
-            nt_manager.put_string("direction", "9999")  # can we calculate x and y direc
+            nt_manager.put_string("direction", "9999")

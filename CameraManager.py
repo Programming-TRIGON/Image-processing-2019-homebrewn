@@ -9,7 +9,6 @@ class CameraManager:
         :param cameras_ports: a dictionary of cameras ports
         """
         self._target_to_port_dic = cameras_ports
-        self._current_target = None
         self.__current_camera = None
         self.__cameras = {target: cv2.VideoCapture(port) for target, port in cameras_ports.items()}
 
@@ -21,10 +20,9 @@ class CameraManager:
         if new_target not in self.__cameras.keys():
             raise KeyError("Target does not exist")
 
-        if new_target == self._current_target:
+        if new_target == self.__current_camera.key():
             return
-        self._current_target = new_target
-        self.__current_camera = self.__cameras[self._current_target]
+        self.__current_camera = self.__cameras[new_target]
 
     def read_frame(self):
         """:return: the current frame from the camera"""

@@ -1,13 +1,12 @@
 from networktables import NetworkTables
-import main
 
 
 class NTManager:
 
-    def __init__(self, table_key, robot_ip='10.59.90.2'):
+    def __init__(self, table_key, nt_settings_listener, robot_ip='10.59.90.2'):
         NetworkTables.initialize(robot_ip)
         self.nt = NetworkTables.getTable(table_key)
-        self.nt.addEntryListener(main.nt_settings_listener)
+        self.nt.addEntryListener(nt_settings_listener)
 
     def put_number(self, entry_key, value):
         self.nt.putNumber(entry_key, value)
