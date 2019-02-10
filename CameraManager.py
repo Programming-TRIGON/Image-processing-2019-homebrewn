@@ -2,18 +2,28 @@ import cv2
 
 
 class CameraManager:
-    __current_camera = None  # here we will put the first camera that will capture frames at the beginning of the match
-    __cameras = {}
 
-    def __init__(self, cams):
-        for c in cams:
-            self.__cameras[c] = cv2.VideoCapture(cams[c])
+    def __init__(self, cameras_ports):
+        """
+        constructs new cameras manager and initialize its cameras list
+        :param cameras_ports: a dictionary of cameras ports
+        """
+        self._target_to_port_dic = cameras_ports
+        self.__current_camera = None
+        self.__cameras = {target: cv2.VideoCapture(port) for target, port in cameras_ports.items()}
 
-    def change_camera(self, camera_port):
-        if camera_port in self.__cameras:
-            self.__current_camera = self.__cameras[camera_port]
-        else:
-            raise KeyError("camera does not exist!")
+    def change_camera(self, new_target):
+        """
+        change the current camera to be the camera that suitable to the new_target
+        :param new_target: the current target from the dashboard
+        """
+        if new_target not in self.__cameras.keys():
+            raise KeyError("Target does not exist")
+
+        if new_target == self.__current_camera.key():
+            return
+        self.__current_camera = self.__cameras[new_target]
 
     def read_frame(self):
+        """:return: the current frame from the camera"""
         return self.__current_camera.read()
